@@ -108,6 +108,12 @@ Playwright chạy **9 kịch bản × 2 cấu hình = 18 tests**: desktop Chromi
 
 E2E tự mở backend tại cổng **3002**, build frontend rồi chạy Vite preview tại **5174**, tách khỏi ứng dụng dev tại 3001/5173. Các cổng kiểm thử phải đang trống. Chạy trên frontend đã build giúp kiểm tra cả việc tải component/chunk ngoài môi trường dev. Ảnh giao diện được sinh tại `artifacts/assignments-desktop.png` và `artifacts/assignments-mobile.png`; thư mục này được Git bỏ qua, gửi ảnh riêng kèm bài nộp.
 
+### Kết quả kiểm tra
+
+Kiểm tra lại ngày **12/11/2026**, Node.js **24.13.0**, từ bản sao mã nguồn sạch chưa có `node_modules`: `npm ci` thành công; `npm run check` thành công với **16/16 backend tests**, TypeScript và build cả hai workspace; **18/18 E2E tests** pass trên frontend production preview, không bỏ qua và không retry. Ảnh desktop/mobile đã được kiểm tra trực quan. Kết quả áp dụng cho môi trường local này; giới hạn trình duyệt được ghi bên dưới.
+
+Gói ZIP nộp bài kèm ảnh trong `artifacts/` và kết quả kiểm tra trong `verification/`.
+
 ### Kiểm tra thủ công nhanh
 
 1. Mở giao diện: thấy đúng A01–A04; A04 có thêm “Nộp trễ”; tiến độ là 2/4.
