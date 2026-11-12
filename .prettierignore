@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.npm-cache/
+package-lock.json
+*.local.md
+artifacts/
+test-results/
+playwright-report/
