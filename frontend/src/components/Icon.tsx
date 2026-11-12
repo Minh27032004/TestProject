@@ -10,9 +10,18 @@ export type IconName =
   | 'check'
   | 'arrow'
   | 'calendar'
+  | 'search'
+  | 'chevron'
   | 'alert';
 
 const paths: Record<IconName, ReactNode> = {
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </>
+  ),
+  chevron: <path d="m9 5 7 7-7 7" />,
   book: (
     <>
       <path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Z" />

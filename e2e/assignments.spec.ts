@@ -39,18 +39,23 @@ test('status filters show the right assignments and support keyboard activation'
 }) => {
   await page.goto('/');
   await expect(page.getByRole('article')).toHaveCount(4);
-  const overdue = page.getByRole('button', { name: /^Quá hạn/ });
+  const overdue = page.getByRole('tab', { name: /^Quá hạn/ });
   await overdue.focus();
   await page.keyboard.press('Enter');
-  await expect(overdue).toHaveAttribute('aria-pressed', 'true');
+  await expect(overdue).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('article')).toHaveCount(1);
   await expect(page.getByRole('article')).toHaveAccessibleName('Foundation U2 – Listening');
-  await page.getByRole('button', { name: /^Đã nộp/ }).click();
+  await page.keyboard.press('ArrowRight');
+  const submitted = page.getByRole('tab', { name: /^Đã nộp/ });
+  await expect(submitted).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('article')).toHaveCount(2);
-  await page.getByRole('button', { name: /^Chưa nộp/ }).click();
+  await page.getByRole('tab', { name: /^Chưa nộp/ }).click();
   await expect(page.getByRole('article')).toHaveCount(1);
   await expect(page.getByRole('article')).toHaveAccessibleName('Foundation U1 – Reading');
-  await page.getByRole('button', { name: /^Tất cả/ }).click();
+  await page.keyboard.press('Home');
+  await expect(page.getByRole('tab', { name: /^Tất cả/ })).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('article')).toHaveCount(4);
 });
 
@@ -113,7 +118,7 @@ test('empty filter can return to the complete list', async ({ page }) => {
     await route.fulfill({ json: body });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: /^Đã nộp/ }).click();
+  await page.getByRole('tab', { name: /^Đã nộp/ }).click();
   await expect(
     page.getByRole('heading', { name: 'Không có bài tập ở trạng thái này' }),
   ).toBeVisible();
@@ -129,6 +134,12 @@ test('layout fits narrow screens and produces a submission screenshot', async ({
   if (testInfo.project.name === 'mobile') {
     await page.setViewportSize({ width: 320, height: 800 });
     await expect(page.getByRole('article').last()).toBeVisible();
+    for (const tab of await page.getByRole('tab').all()) {
+      const bounds = await tab.boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
+    }
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
@@ -141,4 +152,21 @@ test('layout fits narrow screens and produces a submission screenshot', async ({
     path: `artifacts/assignments-${testInfo.project.name}.png`,
     fullPage: true,
   });
+});
+
+test('search works by title or ID and combines with the selected status', async ({ page }) => {
+  await page.goto('/');
+  const search = page.getByRole('textbox', { name: 'Tìm bài tập' });
+  await expect(page.getByRole('article')).toHaveCount(4);
+  await search.fill('a04');
+  await expect(page.getByRole('article')).toHaveCount(1);
+  await expect(page.getByRole('article')).toHaveAccessibleName('Foundation U4 – Speaking');
+  await page.getByRole('tab', { name: /^Chưa nộp/ }).click();
+  await expect(page.getByRole('heading', { name: 'Không tìm thấy bài tập' })).toBeVisible();
+  await page.getByRole('button', { name: 'Xem tất cả bài tập' }).click();
+  await expect(search).toHaveValue('');
+  await expect(page.getByRole('article')).toHaveCount(4);
+  await search.fill('  listening  ');
+  await expect(page.getByRole('article')).toHaveCount(1);
+  await expect(page.getByRole('article')).toHaveAccessibleName('Foundation U2 – Listening');
 });

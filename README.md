@@ -1,6 +1,6 @@
 # IELTS Master — Bài tập của tôi
 
-Ứng dụng bài test Junior Full-stack Developer: hiển thị bài tập của học viên S01, phân biệt chưa nộp, quá hạn, đã nộp và nộp trễ. React + TypeScript ở frontend, Express + TypeScript ở backend, quản lý bằng npm workspaces.
+Ứng dụng bài test Junior Full-stack Developer: hiển thị bài tập của học viên S01, phân biệt chưa nộp, quá hạn, đã nộp và nộp trễ. React + TypeScript và Astryx ở frontend, Express + TypeScript ở backend, quản lý bằng npm workspaces.
 
 ## Chạy ứng dụng
 
@@ -31,7 +31,7 @@ frontend/src/
     useAssignments.ts          Loading, success, error và retry
     AssignmentsPage.tsx         Trang chính
     AssignmentOverview.tsx     Thống kê và tiến độ
-    AssignmentList.tsx         Bộ lọc trạng thái và danh sách
+    AssignmentList.tsx         Tìm kiếm, tab trạng thái và danh sách
     AssignmentCard.tsx         Nội dung từng bài
     AssignmentStatus.tsx       Nhãn trạng thái
     date-format.ts             Định dạng ngày giờ GMT+7
@@ -55,6 +55,14 @@ e2e/                          Playwright tests
 Luồng chính: **React → API → danh tính server → lọc bài của S01 → tính trạng thái → DTO → giao diện**. Backend giữ nghiệp vụ; frontend chỉ trình bày trạng thái, thống kê và lọc trên các bài đã được phép nhận.
 
 Tách frontend/backend theo yêu cầu project nhưng giữ một lockfile để cài và chạy thuận tiện. Chưa cần database, generic repository hoặc state management library cho một luồng đọc dữ liệu nhỏ.
+
+### Giao diện
+
+Frontend dùng [Astryx](https://github.com/meta/astryx) **0.7.14**, theme Neutral và chế độ sáng cố định. Dùng trực tiếp `TabList`, `TextInput`, `Badge`, `Button` và `ProgressBar`. CSS prebuilt được nạp theo thứ tự reset → core → theme; CSS của ứng dụng chỉ phụ trách bố cục và các điều chỉnh hiển thị. Không cần CLI hoặc build plugin StyleX.
+
+Bố cục tập trung vào danh sách bài tập: header ngang, tiến độ ngắn, bộ lọc bàn phím và tìm kiếm theo tên/mã bài. Khi tìm kiếm kết hợp bộ lọc không có kết quả, có thể xoá điều kiện để trở lại danh sách. Font hệ thống hỗ trợ tiếng Việt, không tải font bên ngoài.
+
+Astryx cung cấp component và hành vi bàn phím nhất quán, đổi lại có thêm dung lượng CSS/JS so với giao diện viết tay. Build tách React, thư viện UI và mã ứng dụng thành các chunk riêng để cache độc lập; tổng dung lượng thư viện vẫn cần tải ở lần đầu. Astryx hiện là beta; hai package core/theme được pin cùng phiên bản trong lockfile.
 
 ## Quy tắc và kết quả
 
@@ -96,9 +104,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright chạy **8 kịch bản × 2 cấu hình = 16 tests**: desktop Chromium và mobile Chromium. Kiểm tra API thật, bốn trạng thái, lọc bằng bàn phím, loading, lỗi server/thử lại, lỗi mạng, tài khoản rỗng, bộ lọc rỗng và bố cục tới 320px. Trình duyệt dùng múi giờ UTC và America/Los_Angeles để xác minh giao diện vẫn hiển thị giờ Việt Nam.
+Playwright chạy **9 kịch bản × 2 cấu hình = 18 tests**: desktop Chromium và mobile Chromium. Kiểm tra API thật, bốn trạng thái, tab bằng Enter/Arrow/Home, tìm kiếm kết hợp trạng thái, loading, lỗi server/thử lại, lỗi mạng, tài khoản rỗng, bộ lọc rỗng và bố cục tới 320px. Trình duyệt dùng múi giờ UTC và America/Los_Angeles để xác minh giao diện vẫn hiển thị giờ Việt Nam.
 
-E2E tự mở server tại cổng **3002/5174**, tách khỏi ứng dụng dev tại 3001/5173. Các cổng kiểm thử phải đang trống. Ảnh giao diện được sinh tại `artifacts/assignments-desktop.png` và `artifacts/assignments-mobile.png`; thư mục này được Git bỏ qua, gửi ảnh riêng kèm bài nộp.
+E2E tự mở backend tại cổng **3002**, build frontend rồi chạy Vite preview tại **5174**, tách khỏi ứng dụng dev tại 3001/5173. Các cổng kiểm thử phải đang trống. Chạy trên frontend đã build giúp kiểm tra cả việc tải component/chunk ngoài môi trường dev. Ảnh giao diện được sinh tại `artifacts/assignments-desktop.png` và `artifacts/assignments-mobile.png`; thư mục này được Git bỏ qua, gửi ảnh riêng kèm bài nộp.
 
 ### Kiểm tra thủ công nhanh
 

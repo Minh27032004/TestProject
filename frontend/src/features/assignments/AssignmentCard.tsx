@@ -16,23 +16,22 @@ export function AssignmentCard({ assignment }: { assignment: Assignment }) {
     <article className="assignment-row" aria-labelledby={titleId}>
       <div className="assignment-main">
         <span className={`skill-icon skill-${assignment.skill.toLowerCase()}`}>
-          <Icon name={skillIcons[assignment.skill]} size={23} />
+          <Icon name={skillIcons[assignment.skill]} size={21} />
         </span>
         <div>
+          <h3 id={titleId}>{assignment.title}</h3>
           <p className="assignment-meta">
             <span>{assignment.id}</span>
-            <span aria-hidden="true">·</span>Foundation
+            <span aria-hidden="true">·</span>
+            {assignment.skill}
           </p>
-          <h3 id={titleId}>{assignment.title}</h3>
         </div>
       </div>
       <div className={`assignment-deadline ${assignment.status === 'overdue' ? 'is-overdue' : ''}`}>
         <span className="mobile-label">Hạn nộp</span>
         <time dateTime={assignment.dueAt}>
           <strong>{formatDate(assignment.dueAt)}</strong>
-          <span>
-            {formatTime(assignment.dueAt)} <span className="desktop-timezone">· GMT+7</span>
-          </span>
+          <span>{formatTime(assignment.dueAt)}</span>
         </time>
       </div>
       <div className="assignment-state">

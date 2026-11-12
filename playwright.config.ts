@@ -29,7 +29,8 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: 'npm run dev -w frontend -- --host 127.0.0.1 --port 5174',
+      command:
+        'npm run build -w frontend && npm run preview -w frontend -- --host 127.0.0.1 --port 5174',
       url: 'http://127.0.0.1:5174',
       env: { API_PROXY_TARGET: 'http://127.0.0.1:3002' },
       reuseExistingServer: false,
