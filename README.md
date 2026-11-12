@@ -1,10 +1,38 @@
-# IELTS Master — Bài tập của tôi
+# TestProject — Bài tập của tôi
 
-Ứng dụng bài test Junior Full-stack Developer: hiển thị bài tập của học viên S01, phân biệt chưa nộp, quá hạn, đã nộp và nộp trễ. React + TypeScript và Astryx ở frontend, Express + TypeScript ở backend, quản lý bằng npm workspaces.
+Ứng dụng full-stack hiển thị bài tập của học viên **S01** theo đề bài IELTS Master. Học viên có thể xem hạn nộp, trạng thái, thời gian đã nộp và tìm kiếm hoặc lọc bài tập. Dữ liệu và danh tính học viên được giả lập tại backend.
 
-## Chạy ứng dụng
+## Giao diện
 
-Yêu cầu Node.js **>= 22.12.0** và npm; đã kiểm tra bằng Node.js 24.13.0.
+![Giao diện Bài tập của tôi hiển thị bốn bài tập của S01 và trạng thái nộp bài](docs/images/assignments-desktop.png)
+
+Giao diện sử dụng Astryx với theme sáng, hỗ trợ desktop và mobile, có trạng thái tải dữ liệu, lỗi kết nối, thử lại và danh sách rỗng.
+
+## Công nghệ và cấu trúc
+
+| Thành phần | Công nghệ                       |
+| ---------- | ------------------------------- |
+| Frontend   | React, TypeScript, Vite, Astryx |
+| Backend    | Node.js, Express, TypeScript    |
+| Kiểm thử   | Node.js Test Runner, Playwright |
+
+Hai workspace dùng chung một lockfile và lệnh chạy tại thư mục gốc.
+
+```text
+frontend/src/features/assignments/   Giao diện, API client và quản lý trạng thái tải
+backend/src/modules/assignments/    Route, service, dữ liệu mẫu và logic trạng thái
+backend/src/auth/mock-session.ts    Danh tính học viên giả lập tại server
+backend/src/config/mock-clock.ts    Thời điểm đối chiếu cố định
+backend/tests/                     Unit tests và HTTP integration tests
+e2e/                               Kiểm thử trình duyệt
+docs/images/                       Ảnh giao diện dùng trong README
+```
+
+Luồng dữ liệu: **Frontend → API → danh tính tại server → lọc bài tập → tính trạng thái → trả kết quả**. Quy tắc nghiệp vụ nằm ở backend; frontend trình bày kết quả và xử lý tìm kiếm, bộ lọc.
+
+## Cài đặt và chạy
+
+Yêu cầu **Node.js từ 22.12.0** và npm. Sau khi clone repository, chạy tại thư mục gốc:
 
 ```sh
 npm ci
@@ -12,130 +40,56 @@ npm run dev
 ```
 
 - Giao diện: http://localhost:5173
-- API: http://127.0.0.1:3001/api/me/assignments
-- Health: http://127.0.0.1:3001/api/health
+- API bài tập: http://127.0.0.1:3001/api/me/assignments
+- Health check: http://127.0.0.1:3001/api/health
 
-Trên PowerShell, dùng `npm.cmd`/`npx.cmd` nếu execution policy chặn script `.ps1`. Không cần `.env`, database hoặc tài khoản nội bộ.
+Ứng dụng chạy với dữ liệu mẫu có sẵn, không cần `.env`, database hoặc tài khoản nội bộ. Vite proxy chuyển request `/api` từ frontend sang backend. Trên PowerShell, dùng `npm.cmd` và `npx.cmd` nếu execution policy chặn script `.ps1`.
 
-Frontend gọi `/api`; Vite proxy chuyển request tới backend. Có thể đổi cổng backend bằng biến môi trường `PORT` và đổi đích proxy bằng `API_PROXY_TARGET` khi chạy frontend. Mặc định backend chỉ lắng nghe trên `127.0.0.1` để chạy local.
+## Quy tắc trạng thái
 
-## Kiến trúc
+Thời điểm đối chiếu cố định là **11/11/2026, 09:00 GMT+7** (`2026-11-11T09:00:00+07:00`). Ứng dụng sử dụng thời điểm này để tính trạng thái, không phụ thuộc ngày giờ hiện tại. Ngày giờ trên giao diện được định dạng theo `Asia/Ho_Chi_Minh`.
 
-```text
-frontend/src/
-  app/                         Điểm ghép giao diện
-  components/Icon.tsx          Bộ icon SVG dùng chung
-  features/assignments/
-    assignments.api.ts         Gọi API của học viên hiện tại
-    assignments.types.ts       Kiểu dữ liệu public của API
-    useAssignments.ts          Loading, success, error và retry
-    AssignmentsPage.tsx         Trang chính
-    AssignmentOverview.tsx     Thống kê và tiến độ
-    AssignmentList.tsx         Tìm kiếm, tab trạng thái và danh sách
-    AssignmentCard.tsx         Nội dung từng bài
-    AssignmentStatus.tsx       Nhãn trạng thái
-    date-format.ts             Định dạng ngày giờ GMT+7
-  lib/api.ts                   HTTP helper, timeout và huỷ request
-  styles/                      Bố cục responsive
-backend/src/
-  auth/mock-session.ts         Danh tính S01 giả lập tại server
-  config/mock-clock.ts         Thời điểm đối chiếu cố định
-  modules/assignments/
-    assignments.data.ts        Đủ năm bản ghi S01/S02 của đề
-    assignment-status.ts       Hàm thuần tính trạng thái
-    assignments.service.ts     Lọc dữ liệu và tạo DTO
-    assignments.routes.ts      GET /api/me/assignments
-  middleware/                  Lỗi JSON và 404
-  app.ts                       Khai báo Express, không tự mở cổng
-  server.ts                    Khởi động và đóng server
-backend/tests/                 Unit và HTTP integration tests
-e2e/                          Playwright tests
-```
+| Bài tập     | Kết quả mong đợi                                 |
+| ----------- | ------------------------------------------------ |
+| A01         | Chưa nộp                                         |
+| A02         | Quá hạn                                          |
+| A03         | Đã nộp                                           |
+| A04         | Đã nộp và Nộp trễ                                |
+| B01 của S02 | Không xuất hiện trong API hoặc giao diện của S01 |
 
-Luồng chính: **React → API → danh tính server → lọc bài của S01 → tính trạng thái → DTO → giao diện**. Backend giữ nghiệp vụ; frontend chỉ trình bày trạng thái, thống kê và lọc trên các bài đã được phép nhận.
+Kiểm tra đã nộp trước khi xét quá hạn. “Nộp trễ” là thông tin bổ sung khi thời gian nộp lớn hơn hạn nộp. Quy ước biên: đúng bằng hạn vẫn được coi là đúng hạn.
 
-Tách frontend/backend theo yêu cầu project nhưng giữ một lockfile để cài và chạy thuận tiện. Chưa cần database, generic repository hoặc state management library cho một luồng đọc dữ liệu nhỏ.
+## Cách tránh lộ dữ liệu S02
 
-### Giao diện
+API `GET /api/me/assignments` lấy danh tính S01 từ [mock-session.ts](backend/src/auth/mock-session.ts). Giá trị `studentId` do client gửi qua URL, query, header hoặc body không được dùng làm danh tính.
 
-Frontend dùng [Astryx](https://github.com/meta/astryx) **0.7.14**, theme Neutral và chế độ sáng cố định. Dùng trực tiếp `TabList`, `TextInput`, `Badge`, `Button` và `ProgressBar`. CSS prebuilt được nạp theo thứ tự reset → core → theme; CSS của ứng dụng chỉ phụ trách bố cục và các điều chỉnh hiển thị. Không cần CLI hoặc build plugin StyleX.
+[Service](backend/src/modules/assignments/assignments.service.ts) lọc bài tập theo học viên **trước khi tạo response**, chỉ trả các trường cần hiển thị. Dữ liệu mẫu S02 nằm trong backend, không được import vào frontend hoặc đặt trong `public/`. Response API có `Cache-Control: private, no-store`.
 
-Bố cục tập trung vào danh sách bài tập: header ngang, tiến độ ngắn, bộ lọc bàn phím và tìm kiếm theo tên/mã bài. Khi tìm kiếm kết hợp bộ lọc không có kết quả, có thể xoá điều kiện để trở lại danh sách. Font hệ thống hỗ trợ tiếng Việt, không tải font bên ngoài.
-
-Astryx cung cấp component và hành vi bàn phím nhất quán, đổi lại có thêm dung lượng CSS/JS so với giao diện viết tay. Build tách React, thư viện UI và mã ứng dụng thành các chunk riêng để cache độc lập; tổng dung lượng thư viện vẫn cần tải ở lần đầu. Astryx hiện là beta; hai package core/theme được pin cùng phiên bản trong lockfile.
-
-## Quy tắc và kết quả
-
-Thời điểm đối chiếu luôn là **11/11/2026 09:00 GMT+7**, lưu bằng `2026-11-11T09:00:00+07:00`. Không dùng thời gian hiện tại của máy để tính trạng thái. Timestamps dùng ISO có offset; giao diện định dạng rõ `Asia/Ho_Chi_Minh`, bất kể múi giờ trình duyệt.
-
-1. Có thời gian nộp → **Đã nộp**.
-2. Thời gian nộp lớn hơn hạn nộp → thêm **Nộp trễ**.
-3. Chưa nộp và thời điểm đối chiếu lớn hơn hạn → **Quá hạn**.
-4. Còn lại → **Chưa nộp**.
-
-Quy ước biên: đúng bằng hạn nộp vẫn đúng hạn; lớn hơn dù 1 ms thì đã qua hạn.
-
-| Bài | Hạn nộp GMT+7    | Kết quả                            |
-| --- | ---------------- | ---------------------------------- |
-| A01 | 13/11/2026 23:59 | Chưa nộp                           |
-| A02 | 09/11/2026 23:59 | Quá hạn                            |
-| A03 | 10/11/2026 23:59 | Đã nộp                             |
-| A04 | 08/11/2026 23:59 | Đã nộp + Nộp trễ                   |
-| B01 | Thuộc S02        | Không xuất hiện trong response S01 |
-
-### Cách tránh lộ dữ liệu S02
-
-Danh tính S01 lấy từ `mock-session.ts` ở server. Route không dùng `studentId` từ URL, query, header hoặc body làm danh tính. Service lọc ownership **trước khi** tạo response, chỉ trả các trường UI cần và không trả trường `studentId` của từng bản ghi. Fixture S02 chỉ tồn tại trong backend, không được import vào frontend hay đặt trong `public/`.
-
-Response `/api` có `Cache-Control: private, no-store`. Đây là danh tính giả lập đúng phạm vi đề, chưa phải cơ chế xác thực thật. Khi dùng thực tế cần thay bằng session đã xác thực.
+Ví dụ, gọi `/api/me/assignments?studentId=S02` vẫn chỉ nhận A01–A04 của S01. Đây là cơ chế giả lập theo đề; khi dùng thực tế cần thay bằng session đã được xác thực.
 
 ## Kiểm tra
+
+Kiểm tra định dạng, TypeScript, unit/HTTP tests và build cả hai workspace:
 
 ```sh
 npm run check
 ```
 
-Lệnh trên kiểm tra định dạng, TypeScript, chạy **16 unit/HTTP tests**, sau đó build cả frontend và backend. Unit tests kiểm đủ bốn trường hợp, biên thời gian và offset; HTTP tests thử giả mạo S02 qua query, header, authorization, body và URL khác.
-
-Kiểm thử trình duyệt:
+Kiểm thử trình duyệt trên frontend đã build:
 
 ```sh
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Playwright chạy **9 kịch bản × 2 cấu hình = 18 tests**: desktop Chromium và mobile Chromium. Kiểm tra API thật, bốn trạng thái, tab bằng Enter/Arrow/Home, tìm kiếm kết hợp trạng thái, loading, lỗi server/thử lại, lỗi mạng, tài khoản rỗng, bộ lọc rỗng và bố cục tới 320px. Trình duyệt dùng múi giờ UTC và America/Los_Angeles để xác minh giao diện vẫn hiển thị giờ Việt Nam.
+E2E tự mở backend và frontend preview tại cổng **3002/5174**; hai cổng này cần đang trống. Phạm vi kiểm thử gồm bốn trạng thái, lọc đúng S01, giả mạo danh tính S02, biên thời gian, tìm kiếm, thao tác bàn phím, loading/error/retry/empty và bố cục tới 320px. Trình duyệt được kiểm tra ở múi giờ UTC và America/Los_Angeles để xác minh giao diện vẫn hiển thị giờ Việt Nam.
 
-E2E tự mở backend tại cổng **3002**, build frontend rồi chạy Vite preview tại **5174**, tách khỏi ứng dụng dev tại 3001/5173. Các cổng kiểm thử phải đang trống. Chạy trên frontend đã build giúp kiểm tra cả việc tải component/chunk ngoài môi trường dev. Ảnh giao diện được sinh tại `artifacts/assignments-desktop.png` và `artifacts/assignments-mobile.png`; thư mục này được Git bỏ qua, gửi ảnh riêng kèm bài nộp.
+**Kết quả kiểm tra ngày 12/11/2026, Node.js 24.13.0:** cài sạch bằng `npm ci` thành công; format, typecheck và build thành công; **16/16 backend tests** và **18/18 E2E tests** pass, không bỏ qua hoặc retry.
 
-### Kết quả kiểm tra
+## Phần chưa làm
 
-Kiểm tra lại ngày **12/11/2026**, Node.js **24.13.0**, từ bản sao mã nguồn sạch chưa có `node_modules`: `npm ci` thành công; `npm run check` thành công với **16/16 backend tests**, TypeScript và build cả hai workspace; **18/18 E2E tests** pass trên frontend production preview, không bỏ qua và không retry. Ảnh desktop/mobile đã được kiểm tra trực quan. Kết quả áp dụng cho môi trường local này; giới hạn trình duyệt được ghi bên dưới.
+- Chưa có đăng nhập/session thật, database và chức năng upload hoặc nộp bài.
+- Chưa deploy; ứng dụng được chạy và kiểm tra tại local theo phạm vi đề.
+- E2E sử dụng Chromium và giả lập mobile; chưa kiểm tra Firefox, Safari hoặc thiết bị vật lý.
 
-Gói ZIP nộp bài kèm ảnh trong `artifacts/` và kết quả kiểm tra trong `verification/`.
-
-### Kiểm tra thủ công nhanh
-
-1. Mở giao diện: thấy đúng A01–A04; A04 có thêm “Nộp trễ”; tiến độ là 2/4.
-2. Chọn bộ lọc: Chưa nộp có 1 bài, Quá hạn có 1 bài, Đã nộp có 2 bài.
-3. Mở `/api/me/assignments?studentId=S02`: vẫn chỉ có bốn bài của S01, không có B01.
-4. Thu nhỏ màn hình: thông tin hạn và thời gian nộp vẫn đọc được, không tràn ngang.
-
-## Chạy bản build local
-
-```sh
-npm run build
-npm start
-```
-
-Mở terminal khác:
-
-```sh
-npm run preview
-```
-
-Truy cập http://localhost:4173. Vite preview chỉ để kiểm tra local; triển khai thật cần static hosting cho `frontend/dist` và reverse proxy `/api` tới backend.
-
-## Phạm vi chưa làm
-
-Chưa có đăng nhập/session thật, database, chức năng upload/nộp bài hoặc deploy. E2E đã cấu hình cho Chromium; chưa kiểm thử Firefox, Safari hay thiết bị vật lý. Dữ liệu hoàn toàn giả lập theo đề, không sử dụng dữ liệu thật hoặc secrets.
+Toàn bộ dữ liệu là dữ liệu giả lập theo đề, không sử dụng dữ liệu thật hoặc secrets.
